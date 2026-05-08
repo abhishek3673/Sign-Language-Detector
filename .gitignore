@@ -1,0 +1,9 @@
+venv/
+kaggle_data/
+dataset.csv
+model/
+labels.txt
+.env
+__pycache__/
+*.pyc
+*.h5

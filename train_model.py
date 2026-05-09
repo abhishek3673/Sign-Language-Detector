@@ -1,3 +1,6 @@
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -8,8 +11,10 @@ from tensorflow.keras.utils import to_categorical
 
 SEQUENCE_LEN = 30
 
-# load data
-df = pd.read_csv("dataset.csv", header=None)
+# load data — ONE read, fix types immediately
+df = pd.read_csv("dataset.csv", header=None, low_memory=False)
+df.iloc[:, 0] = df.iloc[:, 0].astype(str).str.strip().str.upper()  # fix mixed types
+
 labels = df.iloc[:, 0].values
 data = df.iloc[:, 1:].values
 
@@ -46,7 +51,7 @@ model.compile(optimizer='adam',
 model.summary()
 model.fit(X_train, y_train,
           epochs=30,
-          batch_size=32,
+          batch_size=64,
           validation_data=(X_test, y_test))
 
 model.save("model/lstm_model.h5")

@@ -2,13 +2,15 @@ import cv2
 import mediapipe as mp
 import numpy as np
 from tensorflow.keras.models import load_model
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 import os
+import time
+
 
 load_dotenv()
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-gemini = genai.GenerativeModel("gemini-1.5-flash")
+client = genai.Client(api_key=os.getenv("AIzaSyBhkZQknGUrIGT2o7hNPEg8XbajTwG9Zv0"))
+
 
 model = load_model("model/lstm_model.h5")
 with open("labels.txt") as f:
@@ -28,10 +30,19 @@ sentence = []
 last_word = ""
 proper_sentence = ""
 
+
+
 def fix_grammar(keywords):
-    prompt = f"Convert these sign language keywords into one proper English sentence. Return only the sentence: {' '.join(keywords)}"
-    response = gemini.generate_content(prompt)
-    return response.text.strip()
+    try:
+        prompt = f"Convert these sign language keywords into one proper English sentence. Return only the sentence: {' '.join(keywords)}"
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt
+        )
+        return response.text.strip()
+    except Exception as e:
+        print(f"Gemini error: {e}")
+        return " ".join(keywords)  # fallback = just show keywords
 
 print("Running... Press Q to quit")
 

@@ -19,6 +19,7 @@ SEQUENCE_LEN = 30
 print(f"\nPress SPACE to capture. Need {SAMPLES_NEEDED} samples for '{label}'")
 print("Press Q to quit early\n")
 
+recording = False
 sequence = []
 
 while len(samples) < SAMPLES_NEEDED:
@@ -35,30 +36,42 @@ while len(samples) < SAMPLES_NEEDED:
                                result.multi_hand_landmarks[0],
                                mp_hands.HAND_CONNECTIONS)
 
-    cv2.putText(frame, f"{label} | {len(samples)}/{SAMPLES_NEEDED}",
-                (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,0), 2)
-
-    if mode == 'd' and landmarks:
-        cv2.putText(frame, f"Frames: {len(sequence)}/{SEQUENCE_LEN}",
-                    (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,255,0), 2)
+    # STATUS TEXT
+    if recording:
+        cv2.putText(frame, f"RECORDING... {len(sequence)}/{SEQUENCE_LEN}",
+                    (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,0,255), 2)
+    else:
+        cv2.putText(frame, f"{label} | {len(samples)}/{SAMPLES_NEEDED} | SPACE to start",
+                    (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0,255,0), 2)
 
     cv2.imshow("Collect Data", frame)
     key = cv2.waitKey(1)
 
-    if key == ord(' ') and landmarks:
-        if mode == 's':
-            repeated = landmarks * SEQUENCE_LEN
-            samples.append([label] + repeated)
-            print(f"Captured {len(samples)}/{SAMPLES_NEEDED}")
+    # START RECORDING on SPACE
+    if key == ord(' ') and not recording:
+        if landmarks:
+            recording = True
+            sequence = []
+            print(f"Recording started...")
+        else:
+            print("No hand detected! Show hand first.")
 
-        elif mode == 'd':
-            sequence.append(landmarks)
-            print(f"Frames: {len(sequence)}/{SEQUENCE_LEN}")
-            if len(sequence) == SEQUENCE_LEN:
+    # AUTO CAPTURE FRAMES while recording
+    if recording and landmarks:
+        sequence.append(landmarks)
+        print(f"Frames: {len(sequence)}/{SEQUENCE_LEN}")
+
+        if len(sequence) == SEQUENCE_LEN:
+            if mode == 's':
+                repeated = landmarks * SEQUENCE_LEN
+                samples.append([label] + repeated)
+            elif mode == 'd':
                 flat = [label] + [v for frame_lm in sequence for v in frame_lm]
                 samples.append(flat)
-                sequence = []
-                print(f"Sequence saved! {len(samples)}/{SAMPLES_NEEDED}")
+
+            print(f"Saved! {len(samples)}/{SAMPLES_NEEDED}")
+            recording = False
+            sequence = []
 
     if key == ord('q'):
         break

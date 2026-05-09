@@ -9,7 +9,7 @@ import time
 
 
 load_dotenv()
-client = genai.Client(api_key=os.getenv("AIzaSyBhkZQknGUrIGT2o7hNPEg8XbajTwG9Zv0"))
+client = genai.Client(api_key=os.getenv("your_key"))
 
 
 model = load_model("model/lstm_model.h5")
